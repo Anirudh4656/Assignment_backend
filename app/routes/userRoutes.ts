@@ -4,10 +4,14 @@ const router = express.Router();
 import expressAsyncHandler from "express-async-handler";
 import {
 
-  listFiles
+  listFiles,keys,
+  uploadFile,
+  userPlans
 } from "../controller/userController";
 
-// router.post("/users/uploadfile", expressAsyncHandler(uploadFile));
+router.post("/users/uploadfile", expressAsyncHandler(uploadFile));
 router.get("/users/file", expressAsyncHandler(listFiles));
+router.get("/users/keys", expressAsyncHandler(keys));
+router.post("/users/plans/:plansId", expressAsyncHandler(userPlans));
 
 export default router;

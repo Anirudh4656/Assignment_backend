@@ -23,7 +23,9 @@ export const createPlan= async(req:Request,res:Response)=>{
 export const getPlans = async (req: Request, res: Response) => {
   try {
     const plans = await Plan.find();
-    res.send(createResponse({ msg: "Plans Created",plans }));
+    console.log("in backend of get plans",plans)
+    res.send(createResponse(plans));
+
   } catch (error) {
     throw createHttpError(401, { message: "error getting Plan" });
   }

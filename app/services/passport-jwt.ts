@@ -89,7 +89,13 @@ export const createUserTokens=(user:any)=>{
         email:user.email, 
         id:user._id ,
         role:user.role,
-        user:user.username
+        user:user.username,
+        apiUsage:user.apiUsage,
+ storageUsage:user.storageUsage,
+ apiKey:user.apiKey,
+ plan:user.plan,
+ publicSecret:user.publicSecret,
+
     }
     console.log("payload ",payload) ;
     const token =jwt.sign(payload,"dghfghghjghjghjghj",{expiresIn:"1h"});

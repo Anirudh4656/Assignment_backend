@@ -9,8 +9,8 @@ export interface IFile extends Document {
 
 const fileSchema = new Schema<IFile>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  filename: { type: String, required: true },
-  filepath: { type: String, required: true },
+  filename: { type: String, required: false },
+  filepath: { type: String, required: false },
   isPublic: { type: Boolean, default: false },
 });
 
