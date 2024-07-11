@@ -5,7 +5,7 @@ import { type IUser, UserRole } from "../schemas/User";
 import createHttpError from "http-errors";
 import {User} from "../schemas/User"
 interface AuthRequest extends Request {
-  user?: any;
+  users?: any;
 }
 export const roleAuth = (
   roles: UserRole | UserRole[],
@@ -40,9 +40,9 @@ export const roleAuth = (
       const decodedUser = jwt.verify(token!, "dghfghghjghjghjghj"!) as IUser;
       //req.user?
 //change any to type of user
-      req.user = await User.findById(decodedUser.id).select('-password');
+      req.users = await User.findById(decodedUser.id).select('-password');
 
-      console.log("decode check middleware", req.user);
+      console.log("decode check middleware", req.users);
 
 
         if (decodedUser.role == null || !Object.values(UserRole).includes(decodedUser.role)) {

@@ -5,12 +5,15 @@ export interface IFile extends Document {
   filename: string;
   filepath: string;
   isPublic: boolean;
+  filesize:number;
+  _id:any;
 }
 
 const fileSchema = new Schema<IFile>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  filename: { type: String, required: false },
-  filepath: { type: String, required: false },
+  filename: { type: String, required: true },
+  filesize: { type: Number, required: true },
+  filepath: { type: String, required: true },
   isPublic: { type: Boolean, default: false },
 });
 

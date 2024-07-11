@@ -7,7 +7,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     message: (err?.message ?? "Something went wrong!") as string,
     data: err?.data ?? {},
   };
-  res.status(response.error_code).send(response);
+  res.status(response.error_code).json(response);
   next();
 };
 
