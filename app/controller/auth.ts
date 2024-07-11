@@ -22,6 +22,6 @@ export const registerUser = async (req: any, res: any) => {
   } //will change to through http error
   const user = new User({ email, password, username });
   await user.save();
-  console.log("success");
+  console.log("success",user);
   res.send(createResponse(user));
 };

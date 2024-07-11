@@ -5,7 +5,7 @@ import { type IUser, UserRole } from "../schemas/User";
 import createHttpError from "http-errors";
 import {User} from "../schemas/User"
 interface AuthRequest extends Request {
-  users?: any;
+  user?: any;
 }
 export const roleAuth = (
   roles: UserRole | UserRole[],
@@ -13,12 +13,23 @@ export const roleAuth = (
 ): any =>
   expressAsyncHandler(
     async (req: AuthRequest , res: Response, next: NextFunction) => {
-      if (publicRoutes.includes(req.path)) {
-        next();
-     
+      const publicRoutes = '/file';
+      console.log("req.path",req.path);
+      if(req.path==='/file'){
+        console.log("req.path",req.path);
+        console.log("in public  auth")
+        next()
         return;
       }
-
+      // console.log("req.path",req.path) ;
+      // console.log(publicRoutes) ;
+      // console.log("check condition ",publicRoutes.includes(req.path))
+      // if(publicRoutes.includes(req.path)) {
+      //   console.log("in public of role auth")
+      //   next();
+      //   return;
+      // }
+      console.log("in public of notrole auth")
       let token = req.headers["authorization"]?.replace("Bearer ", "");
       // console.log("authorization token",token1);
       //logic for handling admin portel
@@ -40,10 +51,10 @@ export const roleAuth = (
       const decodedUser = jwt.verify(token!, "dghfghghjghjghjghj"!) as IUser;
       //req.user?
 //change any to type of user
-      req.users = await User.findById(decodedUser.id).select('-password');
+      // req.users = await User.findById(decodedUser.id).select('-password');
 
-      console.log("decode check middleware", req.users);
-
+      // console.log("decode check middleware", req.users);
+      req.user = decodedUser ;
 
         if (decodedUser.role == null || !Object.values(UserRole).includes(decodedUser.role)) {
           throw createHttpError(401, { message: "Invalid user role" });
