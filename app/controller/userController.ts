@@ -6,8 +6,9 @@ import { Plan } from "../schemas/PlanSchema";
 import { upload } from "../..";
 import { createResponse } from "../helper/response";
 import createHttpError from "http-errors";
+import Stripe from "stripe"
 // import Cryptr from "Cryptr";
-
+const stripe = new Stripe("sk_test_51PcIxwJStpKXj5d4kCsEjXrpwYLr5MmdMVVVnkbEpMOtTevRhqGdAMoYYUN7TsVZHtg8yjNBqGbLBTWXAz1ADaS500KSXxa9Pk"!);
 
 export const uploadFile = async (req: Request, res: Response) => {
   let file;
@@ -55,11 +56,58 @@ export const uploadFile = async (req: Request, res: Response) => {
 };
 
 export const listFiles = async (req: Request, res: Response) => {
+  const {page} =req.query
   try {
-    const mediaFiles = await File.find().sort({ _id: -1 });
-    res.send(createResponse(mediaFiles));
+    const LIMIT= 2; 
+    const startIndex=(Number(page)-1) *LIMIT;
+    const total = await File.countDocuments({});
+    const files = await File.find().sort({ _id: -1 }).limit(LIMIT).skip(startIndex);
+    res.send(createResponse({files,currentPage:Number(page),NumberOfPages:Math.ceil(total/LIMIT)}));
   } catch (e) {
     console.log(e);
+  }
+};
+
+export const createPaymentIntent = async (req: Request, res: Response): Promise<void> => {
+  const { paymentMethodId, planId } = req.body;
+console.log("in card Payment",planId,paymentMethodId);
+  // Retrieve plan details from your database
+  const plan = await Plan.findById(planId);
+  if (!plan) {
+    throw createHttpError(404, "Plan not found");
+  }
+
+  const amount = plan.price * 100; // Convert to cents
+
+  try {
+      const paymentIntent = await stripe.paymentIntents.create({
+          amount,
+          currency: 'usd',
+          payment_method: paymentMethodId,
+          confirm: true,
+          automatic_payment_methods: {
+            enabled: true,
+            allow_redirects: 'never',
+          },
+      });
+
+      const userId = req.user as IUser;
+      console.log("in userId of Plans:", userId.id);
+      const user = await User.findById(userId.id).populate("plan");
+      console.log("in userPlans", user);
+      if (plan && user) {
+        // user?.plan.push(plan);
+        user.plan = [plan];
+        user.apiUsage = 0
+        user.storageUsage =0
+        await user.save();
+      }
+      if (user) {
+        res.send(createResponse({ clientSecret: paymentIntent.client_secret, user, message: "Plans added succesfully" }));
+      }
+  } catch (error:any) {
+    res.status(500).json(createResponse({message: error.message, error }));
+
   }
 };
 
@@ -76,6 +124,7 @@ export const userPlans = async (req: Request, res: Response) => {
     // user?.plan.push(plan);
     user.plan = [plan];
     user.apiUsage = 0
+    user.storageUsage =0
     await user.save();
   }
   // userDetails.plan = plan.id;
@@ -103,7 +152,7 @@ export const Accesskeys = async (req: Request, res: Response) => {
       throw createHttpError(404, "File not found");
     }
     if (file.user.toString() === accessKey) {
-      res.send(createResponse({ statusCode: 200, message: "Access granted" }));
+      res.status(200).json(createResponse({ message: "Access granted" }));
     } else {
       throw createHttpError(401, "Invalid access key");
     }

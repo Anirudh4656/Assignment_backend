@@ -14,6 +14,7 @@ import cors from "cors";
 import errorHandler from "./app/middlewares/errorHandler";
 import multer from 'multer';
 import path from "path";
+import { File } from "./app/schemas/FileSchema";
 import apiAuth from "./app/middlewares/apiAuth";
 import apiKeyLimit from "./app/middlewares/apiKeyLimit";
 const app:Express=express();
@@ -68,8 +69,24 @@ const initApp=async():Promise<void>=>{
    initDb();
  
   initPassport();
-    app.get('/',(req:Request,res:Response)=>{
-        res.send({status:"ok"});
+    app.get('/file/:id',async(req:Request,res:Response)=>{
+      const {id} =req.params;
+      console.log("id",id)
+      if(!id){
+        return
+      }
+      try{
+        const file = await File.findById(id);
+        if (file) {
+          console.log("file", file);
+          res.download(file.filepath, file.filename);
+        }
+      }catch(e){
+        console.log(e);
+      }
+    
+
+ 
     });
     app.use('/api',authRoutes);
     app.use('/api/admin',roleAuth(UserRole.ADMIN),adminRoutes);
