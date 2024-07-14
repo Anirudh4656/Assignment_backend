@@ -6,6 +6,8 @@ export interface IFile extends Document {
   filepath: string;
   isPublic: boolean;
   filesize:number;
+  createdAt: Date;
+  updatedAt: Date;
   _id:any;
 }
 
@@ -14,7 +16,8 @@ const fileSchema = new Schema<IFile>({
   filename: { type: String, required: true },
   filesize: { type: Number, required: true },
   filepath: { type: String, required: true },
-  isPublic: { type: Boolean, default: false },
-});
+  isPublic: { type: Boolean, default: false },},
+  { timestamps: true }
+);
 
 export const File = model<IFile>('File', fileSchema);

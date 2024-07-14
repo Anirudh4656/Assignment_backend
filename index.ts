@@ -14,11 +14,12 @@ import cors from "cors";
 import errorHandler from "./app/middlewares/errorHandler";
 import multer from 'multer';
 import path from "path";
+import {loadConfig} from "./app/config/config"
 import { File } from "./app/schemas/FileSchema";
-import apiAuth from "./app/middlewares/apiAuth";
-import apiKeyLimit from "./app/middlewares/apiKeyLimit";
+const port=5000;
 const app:Express=express();
 const router  =express.Router;
+// dotenv.config();
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(cors());
 app.use(express.json());
@@ -26,8 +27,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/uploads', express.static('uploads'))
 app.use(bodyParser.json());
 
-const port= 5000;
-dotenv.config();
+
 declare global{
     namespace Express{
         interface User extends Omit<IUser,"password">{}
@@ -66,6 +66,7 @@ export  const upload = multer({
     }
   }
 const initApp=async():Promise<void>=>{
+
    initDb();
  
   initPassport();

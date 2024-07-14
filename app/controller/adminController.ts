@@ -71,9 +71,15 @@ export const blockUser = async (req: Request, res: Response) => {
   res.send(createResponse({ msg: "User blocked" }));
 };
 export const Users = async (req: Request, res: Response) => {
-  const users = await User.find();
-  console.log(users);
-  res.send(createResponse(users));
+
+  try {
+    const users = await User.find();
+    console.log(users);
+    res.send(createResponse(users));
+  } catch (e) {
+    console.log(e);
+  }
+
 };
 
 export const deleteUser = async (

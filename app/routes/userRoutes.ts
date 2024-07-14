@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 const router = express.Router();
 import apiKeyLimit from "../middlewares/apiKeyLimit";
 import expressAsyncHandler from "express-async-handler";
-import rateLimiter from '../middlewares/rateLimiter';
+
 import {
   listFiles,
   Accesskeys,
