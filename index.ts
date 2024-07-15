@@ -90,8 +90,8 @@ const initApp=async():Promise<void>=>{
  
     });
     app.use('/api',authRoutes);
-    app.use('/api/admin',roleAuth(UserRole.ADMIN),adminRoutes);
-    app.use('/api',roleAuth(UserRole.USER),userRoutes);
+  app.use("/api/admin", roleAuth(UserRole.ADMIN,['/Plans']), adminRoutes);
+  app.use("/api", roleAuth(UserRole.USER,['/users/file']), userRoutes);
     
   
 
