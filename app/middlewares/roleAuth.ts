@@ -12,14 +12,9 @@ export const roleAuth = (
 ): any =>
   expressAsyncHandler(
     async (req: AuthRequest, res: Response, next: NextFunction) => {
-      // console.log(
-      //   "req.path",
-      //   req.path,
-      //   publicRoutes.includes(req.path),
-      //   "public route:",
-      //   publicRoutes
-      // );
+      
       if (publicRoutes.includes(req.path)) {
+
         console.log("passed");
         next();
         return;
@@ -33,7 +28,7 @@ export const roleAuth = (
         });
       }
 
-      const decodedUser = jwt.verify(token!, "dghfghghjghjghjghj"!) as IUser;
+      const decodedUser = jwt.verify(token!, process.env.SECRET_KEY!) as IUser;
 
       if (
         decodedUser.role == null ||
@@ -42,16 +37,16 @@ export const roleAuth = (
         throw createHttpError(401, { message: "Invalid user role" });
       }
       console.log("in roles include", roles.includes(decodedUser.role));
-      if (!roles.includes(decodedUser.role)) {
-        console.log("in roles include");
-        const type =
-          decodedUser.role.slice(0, 1) +
-          decodedUser.role.slice(1).toLocaleLowerCase();
+      // if (!roles.includes(decodedUser.role)) {
+      //   console.log("in roles include");
+      //   const type =
+      //     decodedUser.role.slice(0, 1) +
+      //     decodedUser.role.slice(1).toLocaleLowerCase();
 
-        throw createHttpError(401, {
-          message: `${type} can not access this resource`,
-        });
-      }
+      //   throw createHttpError(401, {
+      //     message: `${type} can not access this resource`,
+      //   });
+      // }
       req.user = decodedUser;
       next();
     }
