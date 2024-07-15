@@ -6,9 +6,9 @@ import { Plan } from "../schemas/PlanSchema";
 import { upload } from "../..";
 import { createResponse } from "../helper/response";
 import createHttpError from "http-errors";
-import Stripe from "stripe"
+import Stripe from "stripe";
 // import Cryptr from "Cryptr";
-const stripe = new Stripe("sk_test_51PcIxwJStpKXj5d4kCsEjXrpwYLr5MmdMVVVnkbEpMOtTevRhqGdAMoYYUN7TsVZHtg8yjNBqGbLBTWXAz1ADaS500KSXxa9Pk"!);
+
 
 export const uploadFile = async (req: Request, res: Response) => {
   let file;
@@ -56,21 +56,38 @@ export const uploadFile = async (req: Request, res: Response) => {
 };
 
 export const listFiles = async (req: Request, res: Response) => {
-  const {page} =req.query
+ 
+  const { page } = req.query;
+  console.log("page",page);
   try {
-    const LIMIT= 2; 
-    const startIndex=(Number(page)-1) *LIMIT;
+    const LIMIT = 2;
+    const startIndex = (Number(page) - 1) * LIMIT;
     const total = await File.countDocuments({});
-    const files = await File.find().sort({ _id: -1 }).limit(LIMIT).skip(startIndex);
-    res.send(createResponse({files,currentPage:Number(page),NumberOfPages:Math.ceil(total/LIMIT)}));
+    const files = await File.find()
+      .sort({ _id: -1 })
+      .limit(LIMIT)
+      .skip(startIndex);
+    res.send(
+      createResponse({
+        files,
+        currentPage: Number(page),
+        NumberOfPages: Math.ceil(total / LIMIT),
+      })
+    );
   } catch (e) {
     console.log(e);
   }
 };
 
-export const createPaymentIntent = async (req: Request, res: Response): Promise<void> => {
+export const createPaymentIntent = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const STRIPE=process.env.STRIPE_SECRET;
+
+const stripe = new Stripe( STRIPE!);
   const { paymentMethodId, planId } = req.body;
-console.log("in card Payment",planId,paymentMethodId);
+  console.log("in card Payment", planId, paymentMethodId);
   // Retrieve plan details from your database
   const plan = await Plan.findById(planId);
   if (!plan) {
@@ -80,34 +97,39 @@ console.log("in card Payment",planId,paymentMethodId);
   const amount = plan.price * 100; // Convert to cents
 
   try {
-      const paymentIntent = await stripe.paymentIntents.create({
-          amount,
-          currency: 'usd',
-          payment_method: paymentMethodId,
-          confirm: true,
-          automatic_payment_methods: {
-            enabled: true,
-            allow_redirects: 'never',
-          },
-      });
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency: "usd",
+      payment_method: paymentMethodId,
+      confirm: true,
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: "never",
+      },
+    });
 
-      const userId = req.user as IUser;
-      console.log("in userId of Plans:", userId.id);
-      const user = await User.findById(userId.id).populate("plan");
-      console.log("in userPlans", user);
-      if (plan && user) {
-        // user?.plan.push(plan);
-        user.plan = [plan];
-        user.apiUsage = 0
-        user.storageUsage =0
-        await user.save();
-      }
-      if (user) {
-        res.send(createResponse({ clientSecret: paymentIntent.client_secret, user, message: "Plans added succesfully" }));
-      }
-  } catch (error:any) {
-    res.status(500).json(createResponse({message: error.message, error }));
-
+    const userId = req.user as IUser;
+    console.log("in userId of Plans:", userId.id);
+    const user = await User.findById(userId.id).populate("plan");
+    console.log("in userPlans", user);
+    if (plan && user) {
+      // user?.plan.push(plan);
+      user.plan = [plan];
+      user.apiUsage = 0;
+      user.storageUsage = 0;
+      await user.save();
+    }
+    if (user) {
+      res.send(
+        createResponse({
+          clientSecret: paymentIntent.client_secret,
+          user,
+          message: "Plans added succesfully",
+        })
+      );
+    }
+  } catch (error: any) {
+    res.status(500).json(createResponse({ message: error.message, error }));
   }
 };
 
@@ -123,14 +145,13 @@ export const userPlans = async (req: Request, res: Response) => {
   if (plan && user) {
     // user?.plan.push(plan);
     user.plan = [plan];
-    user.apiUsage = 0
-    user.storageUsage =0
+    user.apiUsage = 0;
+    user.storageUsage = 0;
     await user.save();
   }
   // userDetails.plan = plan.id;
- 
- 
-  console.log("after plans userDetails:",)
+
+  console.log("after plans userDetails:");
   console.log("in userPlans after adding plans", user);
   if (user) {
     res.send(createResponse({ user, message: "Plans added succesfully" }));
@@ -142,12 +163,7 @@ export const Accesskeys = async (req: Request, res: Response) => {
 
   try {
     const file = await File.findById(id);
-    console.log(
-      "file.user:",
-      file?.user,
-      "accesskey is same:",
-      accessKey,
-    );
+    console.log("file.user:", file?.user, "accesskey is same:", accessKey);
     if (!file) {
       throw createHttpError(404, "File not found");
     }
