@@ -1,11 +1,15 @@
 import mongoose from "mongoose";
-// const mongodbUrl = process.env.MONGODB_URL ?? "";
-//willcheck
-//change to process.env.MONGODB_URI ??'';
+
+
 export const initDb=async():Promise<boolean>=>{
+    const Mongo_db =process.env.MONG_URL
+    if (!Mongo_db) {
+        throw new Error('MONG_URL environment variable is not defined.');
+      }
+console.log("mongodb",Mongo_db);
 return await new Promise((resolve,reject)=>{
     mongoose.set('strictQuery',false);
-    mongoose.connect("mongodb+srv://anirudh75way:75@cluster0.wirznns.mongodb.net/").then(()=>{
+    mongoose.connect(Mongo_db).then(()=>{
         console.log('Db Connected!');
         resolve(true);
     }).catch(reject);
