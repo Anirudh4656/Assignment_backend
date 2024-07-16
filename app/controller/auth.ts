@@ -1,11 +1,11 @@
 import { type IUser, User } from "../schemas/User";
-import expressAsyncHandler from "express-async-handler";
 import { createResponse } from "../helper/response";
 import { createUserTokens } from "../services/passport-jwt";
 
 //validate
 
 export const loginUser = async (req: any, res: any) => {
+  console.log("in login user",req.user)
   console.log("in user token", req.user._doc);
 
   const createToken = createUserTokens(req.user._doc!);
@@ -29,4 +29,3 @@ export const registerUser = async (req: any, res: any) => {
   console.log("success", user);
   res.send(createResponse({ ...tokens,user}));
 };
-

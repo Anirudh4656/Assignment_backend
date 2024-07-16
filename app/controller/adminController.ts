@@ -14,14 +14,14 @@ export const createPlan = async (req: Request, res: Response) => {
     domainLimit,
     apiLimitPerSecond,
   } = req.body;
-  const user=req.user;
-  console.log("in user of getPlans",user);
+  const user = req.user;
+  console.log("in user of getPlans", user);
   const userDetails = await User.findById(user?.id).populate({
     path: "plan",
-  });;
+  }); 
 
   if (!userDetails) {
-    throw createHttpError(404, 'User not found');
+    throw createHttpError(404, "User not found");
   }
   const plan = new Plan({
     name,
@@ -33,16 +33,14 @@ export const createPlan = async (req: Request, res: Response) => {
   });
 
   await plan.save();
- 
+
   res.send(createResponse({ msg: "Plans Created", plan }));
   //test
-  
 };
 export const getPlans = async (req: Request, res: Response) => {
   try {
-  
     const plans = await Plan.find();
-    console.log("in backend of get plans", plans);
+    // console.log("in backend of get plans", plans);
     res.send(createResponse(plans));
   } catch (error) {
     throw createHttpError(401, { message: "error getting Plan" });
@@ -67,19 +65,30 @@ export const blockUser = async (req: Request, res: Response) => {
   }
 
   await user.save();
-  console.log(user);
+  // console.log(user);
   res.send(createResponse({ msg: "User blocked" }));
 };
 export const Users = async (req: Request, res: Response) => {
-
   try {
     const users = await User.find();
-    console.log(users);
+    // console.log(users);
     res.send(createResponse(users));
   } catch (e) {
     console.log(e);
   }
-
+};
+export const user = async (req: Request, res: Response) => {
+  try {
+    const {id} =req.params;
+    // console.log("result",id)
+    const user = await User.findById(id).populate({
+      path: "plan",
+    }); ;
+    // console.log(user);
+    res.send(createResponse(user));
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 export const deleteUser = async (

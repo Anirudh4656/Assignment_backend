@@ -92,7 +92,8 @@ const port=process.env.PORT ||5000
   });
 
   app.use("/api", authRoutes);
-  app.use("/api/admin", roleAuth(UserRole.ADMIN,['/Plans']), adminRoutes);
+    app.use("/api/admin", adminRoutes);
+  // app.use("/api/admin", roleAuth(UserRole.ADMIN,['/Plans']), adminRoutes);
   app.use("/api", roleAuth(UserRole.USER,['/users/file']), userRoutes);
 
   app.use(errorHandler);

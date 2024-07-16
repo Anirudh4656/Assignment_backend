@@ -15,7 +15,7 @@ import {
 router.post("/users/uploadfile", apiKeyLimit, expressAsyncHandler(uploadFile));
 router.post("/users/keys", apiKeyLimit, expressAsyncHandler(Accesskeys));
 router.post("/users/plans/:plansId", expressAsyncHandler(userPlans));
-router.get("/users/file", expressAsyncHandler(listFiles));
+router.get("/users/file",expressAsyncHandler(listFiles));
 router.post("/users/create-payment-intent", expressAsyncHandler(createPaymentIntent));
 
 export default router;

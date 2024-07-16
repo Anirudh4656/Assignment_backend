@@ -39,13 +39,14 @@ export const initPassport=():void =>{
         async(email,password,done)=>{
             try{
                 const user:IUser |null =await User.findOne({email});
-                console.log(`I AM IN USER ${user}`);
+                console.log(`I AM IN USER Passport Check: ${user}`);
                 if(!user){
                     done(createError(401, "User not found!"), false);
                     return
                 }
         
                 if(user.isBlocked){
+                    console.log("user blocked",user.isBlocked)
                     return   done(createError(401, "User is blocked, Contact to admin"), false);
                     
                 }

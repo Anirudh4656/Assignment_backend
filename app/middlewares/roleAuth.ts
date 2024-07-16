@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { type NextFunction, type Request, type Response } from "express";
 import expressAsyncHandler from "express-async-handler";
-import { type IUser, UserRole } from "../schemas/User";
+import { type IUser, User, UserRole } from "../schemas/User";
 import createHttpError from "http-errors";
 interface AuthRequest extends Request {
   user?: any;
@@ -14,12 +14,10 @@ export const roleAuth = (
     async (req: AuthRequest, res: Response, next: NextFunction) => {
       
       if (publicRoutes.includes(req.path)) {
-
-        console.log("passed");
+        console.log("passed in routes");
         next();
         return;
       }
-
       let token = req.headers["authorization"]?.replace("Bearer ", "");
 
       if (!token) {
@@ -28,14 +26,16 @@ export const roleAuth = (
         });
       }
 
-      const decodedUser = jwt.verify(token!, process.env.SECRET_KEY!) as IUser;
-
+     const decodedUser = jwt.verify(token!, process.env.SECRET_KEY!) as IUser;
+   const userValue= User.findById(decodedUser._id);
+   console.log("in user value:",userValue,decodedUser);
       if (
         decodedUser.role == null ||
         !Object.values(UserRole).includes(decodedUser.role)
       ) {
         throw createHttpError(401, { message: "Invalid user role" });
       }
+     
       console.log("in roles include", roles.includes(decodedUser.role));
       // if (!roles.includes(decodedUser.role)) {
       //   console.log("in roles include");
