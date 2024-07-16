@@ -18,12 +18,15 @@ export const registerUser = async (req: any, res: any) => {
   const duplicateUser = await User.findOne({ email });
 
   if (duplicateUser) {
-    return res.send(createResponse({ msg: "Invalid credentials or user blocked" }));
+    return res.send(
+      createResponse({ msg: "Invalid credentials or user blocked" })
+    );
   } //will change to through http error
   const user = new User({ email, password, username });
   await user.save();
-  const { password: _p, ...result } = user;
-  const tokens = createUserTokens(result);
-  console.log("success",user);
-  res.send(createResponse({...tokens,result}));
+  // const { password: _p, ...result } = user;
+  const tokens = createUserTokens(user);
+  console.log("success", user);
+  res.send(createResponse({ ...tokens,user}));
 };
+
