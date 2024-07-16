@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { Strategy, ExtractJwt } from "passport-jwt";
 import passport from "passport";
 import createError from "http-errors";
+
 import { Strategy as LocalStrategy} from 'passport-local';
 
 const isValidPassword=async function(value:string,password:string){
@@ -16,7 +17,7 @@ export const initPassport=():void =>{
     "jwt",
     new Strategy(
         {
-            secretOrKey:"dghfghghjghjghjghj",
+            secretOrKey:process.env.SECRET_KEY!,
             jwtFromRequest:ExtractJwt.fromAuthHeaderAsBearerToken()
         },
         async(token:any,done:any)=>{
@@ -43,9 +44,10 @@ export const initPassport=():void =>{
                     done(createError(401, "User not found!"), false);
                     return
                 }
+        
                 if(user.isBlocked){
-                    done(createError(401, "User is blocked, Contact to admin"), false);
-                    return 
+                    return   done(createError(401, "User is blocked, Contact to admin"), false);
+                    
                 }
                 const validate=await isValidPassword(password,user.password)
                
@@ -83,22 +85,17 @@ export const initPassport=():void =>{
 // (user: Omit<IUser, "password">
 
 export const createUserTokens=(user:any)=>{
-    const jwtSecret=process.env.JWT_SECRET ?? '';
+    const jwtSecret=process.env.SECRET_KEY ?? '';
     console.log("checking user",user);
     const payload = {
         email:user.email, 
         id:user._id ,
         role:user.role,
         user:user.username,
-        apiUsage:user.apiUsage,
- storageUsage:user.storageUsage,
- apiKey:user.apiKey,
- plan:user.plan,
  publicSecret:user.publicSecret,
-
     }
     console.log("payload ",payload) ;
-    const token =jwt.sign(payload,"dghfghghjghjghjghj",{expiresIn:"1h"});
+    const token =jwt.sign(payload,jwtSecret!,{expiresIn:"1h"});
     return {accessToken:token,refreshToken:""}
 }
 export const decodeToken = (token: string) => {
