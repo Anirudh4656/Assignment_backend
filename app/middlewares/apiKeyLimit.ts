@@ -22,6 +22,9 @@ const apiKeyLimit = async (req: Request, res: Response, next: NextFunction) => {
     if (!result) {
       throw createHttpError(401, { message: "Unauthorized" });
     }
+    if (result.plan.length === 0) {
+      return next(createHttpError(404, { message: "No plans available." }));
+    }
     const apiRequestperSecond = result?.plan[0].apiLimit;
     const limiter = getRateLimiter(apiRequestperSecond);
 
@@ -31,9 +34,7 @@ const apiKeyLimit = async (req: Request, res: Response, next: NextFunction) => {
         next(err);
       }
     });
-    if (result.plan.length === 0) {
-      return next(createHttpError(404, { message: "No plan available." }));
-    }
+
     if (
       result.storageUsage >=
       result?.plan[0].storageLimit * 1024 * 1024 * 1024
