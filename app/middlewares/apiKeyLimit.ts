@@ -30,7 +30,7 @@ const apiKeyLimit = async (req: Request, res: Response, next: NextFunction) => {
 
     limiter(req, res, async (err) => {
       if (err) {
-        next(createHttpError(404, { message: "Key not found" }));
+        next(createHttpError(429, { message: "Too many requests from this IP, please try again after a second" }));
         next(err);
       }
     });
