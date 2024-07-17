@@ -10,13 +10,16 @@ import {
   uploadFile,
   userPlans,
   createPaymentIntent,
+  downloadFile
 } from "../controller/userController";
+import verifyApiKey from "../middlewares/verifyApikey";
 
-router.post("/users/uploadfile", apiKeyLimit, expressAsyncHandler(uploadFile));
-router.post("/users/keys/:id", apiKeyLimit, expressAsyncHandler(Accesskeys));
-router.post("/users/plans/:plansId", expressAsyncHandler(userPlans));
+router.post("/users/uploadfile",verifyApiKey, apiKeyLimit, expressAsyncHandler(uploadFile));
+router.post("/users/keys/:id",verifyApiKey, apiKeyLimit, expressAsyncHandler(Accesskeys));
+router.post("/users/plans/:plansId",expressAsyncHandler(userPlans));
 router.get("/users/file",expressAsyncHandler(listFiles));
-router.post("/users/create-payment-intent", expressAsyncHandler(createPaymentIntent));
+router.get("/users/file/download/:id",verifyApiKey,expressAsyncHandler(downloadFile));
+router.post("/users/create-payment-intent",verifyApiKey, expressAsyncHandler(createPaymentIntent));
 
 export default router;
 //unused routes

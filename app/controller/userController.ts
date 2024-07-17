@@ -3,12 +3,12 @@ import asyncHandler from "express-async-handler";
 import { User, IUser } from "../schemas/User";
 import { File } from "../schemas/FileSchema";
 import { Plan } from "../schemas/PlanSchema";
-import { upload } from "../..";
+import { upload } from "../services/multer";
 import { createResponse } from "../helper/response";
 import createHttpError from "http-errors";
 import Stripe from "stripe";
+import fs from 'fs';
 // import Cryptr from "Cryptr";
-
 
 export const uploadFile = async (req: Request, res: Response) => {
   let file;
@@ -38,28 +38,48 @@ export const uploadFile = async (req: Request, res: Response) => {
       filepath: name?.path,
       isPublic,
       filesize: name?.size,
-      publicSecret:user?.publicSecret
+      publicSecret: user?.publicSecret,
     });
 
     await file.save();
-    const userRecord = await User.findById(user.id);
-    if (userRecord && name) {
-      const newUsedStorage = (userRecord.storageUsage || 0) + name?.size;
-      userRecord.storageUsage = newUsedStorage;
-      await userRecord.save();
+    if (user && name) {
+      const newUsedStorage = (user.storageUsage || 0) + name?.size;
+      user.storageUsage = newUsedStorage;
+      await user.save();
     }
 
-    console.log("in userstorage", userRecord);
+    console.log("in userstorage", user);
     res.send(createResponse(file));
   } catch (e) {
     console.log(e);
   }
 };
+export const downloadFile = async (req: Request, res: Response) => {
 
+  try {
+    const { id } = req.params;
+    console.log("id", id);
+    if (!id) {
+      return;
+    }
+    try {
+      const file = await File.findById(id);
+      if (file) {
+        console.log("file", file);
+        const fileStream = fs.createReadStream(file.filepath);
+        fileStream.pipe(res);
+        // res.download(file.filepath, file.filename);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+};
 export const listFiles = async (req: Request, res: Response) => {
- 
   const { page } = req.query;
-  console.log("page",page);
+  console.log("page", page);
   try {
     const LIMIT = 2;
     const startIndex = (Number(page) - 1) * LIMIT;
@@ -84,9 +104,9 @@ export const createPaymentIntent = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const STRIPE=process.env.STRIPE_SECRET;
+  const STRIPE = process.env.STRIPE_SECRET;
 
-const stripe = new Stripe( STRIPE!);
+  const stripe = new Stripe(STRIPE!);
   const { paymentMethodId, planId } = req.body;
   console.log("in card Payment", planId, paymentMethodId);
   // Retrieve plan details from your database
@@ -109,9 +129,8 @@ const stripe = new Stripe( STRIPE!);
       },
     });
 
-    const userId = req.user as IUser;
-    console.log("in userId of Plans:", userId.id);
-    const user = await User.findById(userId.id).populate("plan");
+    const user = req.user as IUser;
+    console.log("in userId of Plans:", user.id);
     console.log("in userPlans", user);
     if (plan && user) {
       // user?.plan.push(plan);
@@ -135,12 +154,13 @@ const stripe = new Stripe( STRIPE!);
 };
 
 export const userPlans = async (req: Request, res: Response) => {
+  //check
   const { plansId } = req.params;
-  console.log("planid:668bd001235daa5ebe6d56ce", plansId);
+  // console.log("planid:668bd001235daa5ebe6d56ce", plansId);
   const plan = await Plan.findById(plansId);
   console.log("plan details of given data", plan);
   const userId = req.user as IUser;
-  console.log("in userId of Plans:", userId.id);
+  console.log("in userId of Plans:", userId);
   const user = await User.findById(userId.id).populate("plan");
   console.log("in userPlans", user);
   if (plan && user) {
@@ -160,10 +180,11 @@ export const userPlans = async (req: Request, res: Response) => {
 };
 export const Accesskeys = async (req: Request, res: Response) => {
   // const { accessKey, id } = req.body;
-  const {id}=req.params;
- 
-  const user =req.user;
-  
+  //check
+  const { id } = req.params;
+
+  const user = req.user;
+  console.log("user of private files", user);
 
   try {
     const file = await File.findById(id);
@@ -171,7 +192,14 @@ export const Accesskeys = async (req: Request, res: Response) => {
     if (!file) {
       throw createHttpError(404, "File not found");
     }
-    console.log("accessuser:",file.user, "id:", user?.publicSecret,"user:",user);
+    console.log(
+      "accessuser:",
+      file.user,
+      "id:",
+      user?.publicSecret,
+      "user:",
+      user
+    );
     if (file.publicSecret === user?.publicSecret) {
       res.status(200).json(createResponse({ message: "Access granted" }));
     } else {

@@ -2,44 +2,39 @@ import { Request, Response, NextFunction } from "express";
 import { User, type IUser } from "../schemas/User";
 import createHttpError from "http-errors";
 import rateLimit from "express-rate-limit";
+const getRateLimiter = (apiRequestperSecond: number) =>
+  rateLimit({
+    windowMs: 1000, // 1 second
+    max: apiRequestperSecond, // limit each IP to apiRequestperSecond requests per windowMs
+    message: "Too many requests from this IP, please try again after a second",
+    headers: true,
+    handler: (req, res, next, options) => {
+      return next(createHttpError(options.statusCode, { message: options.message }));
+    },
+  });
+
 const apiKeyLimit = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = req.user;
-
+console.log("result  in apikeyLimit",result);
     if (!result) {
       throw createHttpError(401, { message: "Unauthorized" });
     }
-    // console.log("in apiKeyLimit :", result);
-    const userDetails = await User.findById(result.id).populate({
-      path: "plan",
-    });
-   
-    //204
-    if (!userDetails) {
-      throw createHttpError(401, { message: "No details Found" });
-    }
-    console.log("in userDetils before:", userDetails);
-    userDetails.apiUsage += 1;
-    await userDetails.save();
+    const apiRequestperSecond = result?.plan[0].apiLimit;
+    const limiter = getRateLimiter(apiRequestperSecond);
 
-    if (userDetails.plan.length === 0) {
-      return next(createHttpError(404, { message: "No plan available." }));
-    }
-
-    const apiRequestperSecond = userDetails?.plan[0].apiLimit;
-    const limiter = rateLimit({
-      windowMs: 1000, //1sec
-      max: apiRequestperSecond, // limit each IP to 5 requests per windowMs
-      message:
-        "Too many requests from this IP, please try again after a second",
-      headers: true,
-      handler: (req, res, next, options) => {
-        //why
-        return next(
-          createHttpError(options.statusCode, { message: options.message })
-        );
-      },
-    });
+    //   windowMs: 1000, //1sec
+    //   max: apiRequestperSecond, // limit each IP to 5 requests per windowMs
+    //   message:
+    //     "Too many requests from this IP, please try again after a second",
+    //   headers: true,
+    //   handler: (req, res, next, options) => {
+    //     //why
+    //     return next(
+    //       createHttpError(options.statusCode, { message: options.message })
+    //     );
+    //   },
+    // });
     limiter(req, res, async (err) => {
       if (err) {
         next(createHttpError(404, { message: "Key not found" }));
@@ -47,31 +42,18 @@ const apiKeyLimit = async (req: Request, res: Response, next: NextFunction) => {
       }
     });
 
-    if (!userDetails.apiKey) {
-      return next(createHttpError(404, { message: "API key is missing." }));
-    }
-   const apiUsage =2;
-     const apiLimit =2
-    if (userDetails.apiUsage > userDetails.plan[0].apiLimit) {
-      return next(
-        createHttpError(429, { message: "API Usage limit exceeded." })
-      );
-    }
-    console.log("in userDetils after", userDetails);
+    
    
-   
-
-    // //what happen if plan expires
   
-    if (
-      userDetails &&
-      result.storageUsage >=
-        userDetails?.plan[0].storageLimit * 1024 * 1024 * 1024
+    if ( result.storageUsage >=
+      result?.plan[0].storageLimit * 1024 * 1024 * 1024
     ) {
       throw createHttpError(404, { message: "Memory limit exceeded." });
     }
-   
-    
+    console.log("user is saving",result)
+    result.apiUsage += 1;
+    await result.save();
+    console.log("user is saving",result)
     next();
   } catch (error: any) {
     next(createHttpError(500, { message: error.message }));
