@@ -25,18 +25,6 @@ const apiKeyLimit = async (req: Request, res: Response, next: NextFunction) => {
     const apiRequestperSecond = result?.plan[0].apiLimit;
     const limiter = getRateLimiter(apiRequestperSecond);
 
-    //   windowMs: 1000, //1sec
-    //   max: apiRequestperSecond, // limit each IP to 5 requests per windowMs
-    //   message:
-    //     "Too many requests from this IP, please try again after a second",
-    //   headers: true,
-    //   handler: (req, res, next, options) => {
-    //     //why
-    //     return next(
-    //       createHttpError(options.statusCode, { message: options.message })
-    //     );
-    //   },
-    // });
     limiter(req, res, async (err) => {
       if (err) {
         next(createHttpError(404, { message: "Key not found" }));
