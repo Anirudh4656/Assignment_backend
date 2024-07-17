@@ -9,29 +9,29 @@ const verifyApiKey = async (
 ) => {
   const result = req.user;
   console.log("api key verify", result);
-  if (!result) {
-    throw createHttpError(401, { message: "Unauthorized" });
-  }
+
   try {
-    const userDetails = await User.findById(result.id).populate({
-      path: "plan",
-    });
-    if (!userDetails) {
-      throw createHttpError(401, { message: "No details Found" });
+    const apiKey = req.headers['x-api-key'];
+  
+    const user = await User.findOne({ apiKey });
+    if (!user) {
+      return next(createHttpError(401, { message: 'Invalid API key' }));
     }
-    if (!userDetails.apiKey) {
-      return next(createHttpError(404, { message: "API key is missing." }));
+
+    if (new Date() > user.apiKeyExpiration) {
+      return next(createHttpError(401, { message: 'API key has expired' }));
     }
+
     if (
-      userDetails.plan.length > 0 &&
-      userDetails.apiUsage > userDetails.plan[0].apiLimit
+      user.plan.length > 0 &&
+      user.apiUsage > user.plan[0].apiLimit
     ) {
       return next(
         createHttpError(424, { message: "API Usage limit exceeded." })
       );
     }
 
-    req.user = userDetails;
+    req.user = user;
     next();
   } catch (error: any) {
     next(createHttpError(500, { message: error.message }));

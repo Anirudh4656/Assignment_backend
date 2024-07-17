@@ -19,6 +19,7 @@ export interface IUser extends BaseSchema {
   apiUsage: number;
   storageUsage: number;
   apiKey: string;
+  apiKeyExpiration: Date;
   plan: IPlan[];
   publicSecret: string;
 }
@@ -33,9 +34,9 @@ const UserSchema = new Schema<IUser>({
   storageUsage: { type: Number, default: 0 },
   isBlocked: { type: Boolean, default: false },
   plan: [{ type: Schema.Types.ObjectId, ref: "Plan" }],
+  apiKeyExpiration: { type: Date },
   apiKey: {
     type: String,
-    default: () => crypto.randomBytes(20).toString("hex"),
   },
   publicSecret: {
     type: String,

@@ -7,9 +7,28 @@ import { upload } from "../services/multer";
 import { createResponse } from "../helper/response";
 import createHttpError from "http-errors";
 import Stripe from "stripe";
-import fs from 'fs';
-// import Cryptr from "Cryptr";
+import crypto from 'crypto';
 
+export const apikey = async(req: Request, res: Response)=>{
+  try{
+  const apiKey = crypto.randomBytes(16).toString('hex'); // Generate a random API key
+  const apiKeyExpiration = new Date();
+  apiKeyExpiration.setDate(apiKeyExpiration.getDate() + 30); // Set expiration date to 30 days from now
+  const userDetails = req.user as IUser;
+  const user = await User.findById(userDetails.id);
+  console.log("userDetails",userDetails)
+  if (!user) {
+     throw createHttpError(404, "Users not found")
+  }
+  user.apiKey = apiKey;
+  user.apiKeyExpiration = apiKeyExpiration;
+  await user.save();
+  res.send(createResponse({apiKey,apiKeyExpiration }));
+}catch(e){
+  console.log(e)
+}
+
+}
 export const uploadFile = async (req: Request, res: Response) => {
   let file;
   try {
@@ -54,29 +73,7 @@ export const uploadFile = async (req: Request, res: Response) => {
     console.log(e);
   }
 };
-export const downloadFile = async (req: Request, res: Response) => {
 
-  try {
-    const { id } = req.params;
-    console.log("id", id);
-    if (!id) {
-      return;
-    }
-    try {
-      const file = await File.findById(id);
-      if (file) {
-        console.log("file", file);
-        const fileStream = fs.createReadStream(file.filepath);
-        fileStream.pipe(res);
-        // res.download(file.filepath, file.filename);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  } catch (e) {
-    console.log(e);
-  }
-};
 export const listFiles = async (req: Request, res: Response) => {
   const { page } = req.query;
   console.log("page", page);
@@ -154,9 +151,8 @@ export const createPaymentIntent = async (
 };
 
 export const userPlans = async (req: Request, res: Response) => {
-  //check
+
   const { plansId } = req.params;
-  // console.log("planid:668bd001235daa5ebe6d56ce", plansId);
   const plan = await Plan.findById(plansId);
   console.log("plan details of given data", plan);
   const userId = req.user as IUser;
@@ -164,13 +160,11 @@ export const userPlans = async (req: Request, res: Response) => {
   const user = await User.findById(userId.id).populate("plan");
   console.log("in userPlans", user);
   if (plan && user) {
-    // user?.plan.push(plan);
     user.plan = [plan];
     user.apiUsage = 0;
     user.storageUsage = 0;
     await user.save();
   }
-  // userDetails.plan = plan.id;
 
   console.log("after plans userDetails:");
   console.log("in userPlans after adding plans", user);
@@ -179,8 +173,7 @@ export const userPlans = async (req: Request, res: Response) => {
   }
 };
 export const Accesskeys = async (req: Request, res: Response) => {
-  // const { accessKey, id } = req.body;
-  //check
+ 
   const { id } = req.params;
 
   const user = req.user;
@@ -188,7 +181,6 @@ export const Accesskeys = async (req: Request, res: Response) => {
 
   try {
     const file = await File.findById(id);
-    // console.log("file.user:", file?.user, "accesskey is same:", accessKey);
     if (!file) {
       throw createHttpError(404, "File not found");
     }
@@ -250,4 +242,26 @@ export const Accesskeys = async (req: Request, res: Response) => {
 //   const tokenString = `${expirationTime}-${id}`;
 //   const encryptedToken = cryptr.encrypt(tokenString);
 //   return encryptedToken;
+// };
+// export const downloadFile = async (req: Request, res: Response) => {
+
+//   try {
+//     const { id } = req.params;
+//     console.log("id", id);
+//     if (!id) {
+//       return;
+//     }
+//     try {
+//       const file = await File.findById(id);
+//       if (file) {
+//         console.log("file", file);
+
+//         res.download(file.filepath, file.filename);
+//       }
+//     } catch (e) {
+//       console.log(e);
+//     }
+//   } catch (e) {
+//     console.log(e);
+//   }
 // };
