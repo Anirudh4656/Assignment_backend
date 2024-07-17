@@ -9,6 +9,7 @@ export interface IFile extends Document {
   createdAt: Date;
   updatedAt: Date;
   _id:any;
+  publicSecret?:string;
 }
 
 const fileSchema = new Schema<IFile>({
@@ -16,7 +17,9 @@ const fileSchema = new Schema<IFile>({
   filename: { type: String, required: true },
   filesize: { type: Number, required: true },
   filepath: { type: String, required: true },
-  isPublic: { type: Boolean, default: false },},
+  isPublic: { type: Boolean, default: false },
+  publicSecret:{type:String,default:false}
+},
   { timestamps: true }
 );
 

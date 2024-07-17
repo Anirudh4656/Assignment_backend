@@ -38,6 +38,7 @@ export const uploadFile = async (req: Request, res: Response) => {
       filepath: name?.path,
       isPublic,
       filesize: name?.size,
+      publicSecret:user?.publicSecret
     });
 
     await file.save();
@@ -158,16 +159,20 @@ export const userPlans = async (req: Request, res: Response) => {
   }
 };
 export const Accesskeys = async (req: Request, res: Response) => {
-  const { accessKey, id } = req.body;
-  console.log("accessKey:", accessKey, "id:", id);
+  // const { accessKey, id } = req.body;
+  const {id}=req.params;
+ 
+  const user =req.user;
+  
 
   try {
     const file = await File.findById(id);
-    console.log("file.user:", file?.user, "accesskey is same:", accessKey);
+    // console.log("file.user:", file?.user, "accesskey is same:", accessKey);
     if (!file) {
       throw createHttpError(404, "File not found");
     }
-    if (file.user.toString() === accessKey) {
+    console.log("accessuser:",file.user, "id:", user?.publicSecret,"user:",user);
+    if (file.publicSecret === user?.publicSecret) {
       res.status(200).json(createResponse({ message: "Access granted" }));
     } else {
       throw createHttpError(401, "Invalid access key");
